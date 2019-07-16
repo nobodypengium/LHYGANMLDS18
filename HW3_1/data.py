@@ -19,7 +19,7 @@ def generate_tfrecord(source_path):
     generate tf_record for basic GAN model
     https://blog.csdn.net/sinat_34474705/article/details/78966064
     """
-    writer = tf.python_io.TFRecordWriter(os.path.join(source_path, "train.tfrecords"))
+    writer = tf.io.TFRecordWriter(os.path.join(source_path, "train.tfrecords"))
     img_dir = os.path.join(source_path, 'faces')
     for imageName in os.listdir(img_dir):
         image = Image.open(os.path.join(img_dir, imageName))
@@ -83,7 +83,7 @@ def get_batch_noise(dimension, batch_size):
 
 
 if __name__ == '__main__':
-    img_path = '/Users/hufangquan/code/GAN_learn/HW3/data/'
+    img_path = 'data/'
     generate_tfrecord(img_path)
     image = readRecord(os.path.join(img_path, 'train.tfrecords'))
     batch = get_batch_image([image], 10)
