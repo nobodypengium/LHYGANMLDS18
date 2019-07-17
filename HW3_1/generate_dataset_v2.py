@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 INPUT_DATA = "data/faces/"  # 原始数据，暂时只生成带标签的数据
 INPUT_DATA_EXTRA = "data/extra_data/images/"  # 更多的数据
 INPUT_LABEL = "data/extra_data/tags.csv"  # 数据标签
-OUTPUT_DATA = 'data/anime_face.npy'  # 将整理后的图片数据通过numpy的格式保存
+OUTPUT_DATA = 'data/anime_face.h5'  # 将整理后的图片数据通过numpy的格式保存
 IMAGE_WIDTH = 64
 IMAGE_HEIGHT = 64
 
