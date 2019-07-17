@@ -90,6 +90,7 @@ def create_image_lists(sess):
             anime_images.append(image_value)
             if processing_image_count % 200 == 0:
                 print("正在读取第" + str(processing_image_count) + "张图片")
+            processing_image_count = processing_image_count + 1
         # current_label += 1  # 注意这一行在上一个for外面，在最外层for里面；作用是在进入最外层for的下一轮循环之前，将"当前标签"加一，以表示下一个图片文件夹
         print("本数据集读取完毕")
 
