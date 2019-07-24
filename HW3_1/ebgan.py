@@ -73,14 +73,14 @@ class EBGAN(object):
         self.channels = channels
         self.img_shape = (self.width, self.height, self.channels)
 
+        # Define the noise shape
+        self.z_dims = 100
+
         # Define the components
         self.encoder = self.__encoder()
         self.decoder = self.__decoder()
         self.generator = self.__decoder()
         self.discriminator = self.__autoencoder()
-
-        # Define the noise shape
-        self.z_dims = 100
 
         # Define the loss function ???
         self.zero_loss = self.__zero_loss
@@ -108,7 +108,7 @@ class EBGAN(object):
 
         self.dis_trainer = Model(inputs=[x_real, z_sample], outputs=[d_loss])
         self.dis_trainer.compile(loss=[self.zero_loss], optimizer=Adam(lr=2.0e-4, beta_1=0.5))
-        # self.dis_trainer.summary()
+        self.dis_trainer.summary()
 
         # Build generator trainer
         self.generator.trainable = True
@@ -118,7 +118,7 @@ class EBGAN(object):
                                  outputs=[g_loss])
         self.gen_trainer.compile(loss=[self.zero_loss],
                                  optimizer=Adam(lr=2.0e-4, beta_1=0.5))
-        # self.gen_trainer.summary()
+        self.gen_trainer.summary()
 
     def __decoder(self):
         # Define the input layer
@@ -138,21 +138,36 @@ class EBGAN(object):
 
         # Convolution layers Conv2D -> LeakyReLU ->Conv2D->LeakyReLU->Conv2D->LeakyReLU->Conv2DT->LeakyReLU
         decoder.add(
-            Conv2D(filter=512, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=512, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
         decoder.add(
-            Conv2D(filter=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
         decoder.add(
-            Conv2D(filter=128, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=128, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
-        # 反卷积层 卷积层的前向操作可以表示为和矩阵C相乘，那么 我们很容易得到卷积层的反向传播就是和C的转置相乘。
-        decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
-                                    kernel_initializer=kernel_init, bias_init=bias_init, padding='same'))
+        # # 反卷积层 卷积层的前向操作可以表示为和矩阵C相乘，那么 我们很容易得到卷积层的反向传播就是和C的转置相乘。
+        # decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
+        #                             kernel_initializer=kernel_init, bias_initializer=bias_init, padding='same'))
+        decoder.add(UpSampling2D())
+        decoder.add(
+            Conv2D(filters=64, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+                   bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
+        decoder.add(
+            Conv2D(filters=3, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+                   bias_initializer=bias_init))
+        decoder.add(LeakyReLU(0.1))
+
+        decoder.add(Flatten())
+        decoder.add(Dense(64 * 64 * 3, activation='tanh'))
+        decoder.add(Reshape((64, 64, 3)))
+
+        decoder.add(LeakyReLU(0.1))
+        decoder.add(Reshape(self.img_shape))
 
         # Define the output
         # NOTE: Here, we just know z in dim(x,y,z) for img is 3, but we concat decoder and encoder together to give x,y information for decoder's output.
@@ -170,19 +185,19 @@ class EBGAN(object):
 
         # Convolution layers
         encoder.add(
-            Conv2D(filter=128, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=128, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         encoder.add(LeakyReLU(0.1))
         encoder.add(
-            Conv2D(filter=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         encoder.add(LeakyReLU(0.1))
         encoder.add(
-            Conv2D(filter=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=256, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         encoder.add(LeakyReLU(0.1))
         encoder.add(
-            Conv2D(filter=512, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+            Conv2D(filters=512, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         encoder.add(LeakyReLU(0.1))
 
@@ -235,7 +250,7 @@ class EBGAN(object):
             g_loss = self.gen_trainer.train_on_batch([imgs, z_sample], dummy)
 
             # Print training state
-            print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss[0], g_loss[0]))
+            print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss, g_loss))
 
             if epoch % 100 == 0:
                 self.discriminator.save('data/EBGAN_model/d/discriminator_{}.h5'.format(epoch))
