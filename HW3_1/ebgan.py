@@ -2,6 +2,7 @@ import os
 import numpy as np
 # from IPython.core.debugger import Tracer
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, UpSampling2D, Conv2D, Activation, Conv2DTranspose
+from keras.optimizers import Adam
 from keras.engine.topology import Layer
 from keras.layers.merge import _Merge
 from keras import Model
@@ -15,12 +16,16 @@ import keras.initializers
 from HW3_1.generate_dataset_v2 import load_h5py_to_np, OUTPUT_DATA
 from functools import partial
 
+
 class DiscriminatorLossLayer(Layer):
     def __init__(self, **kwargs):
         self.is_placeholder = True
-        super(DiscriminatorLossLayer, self).__init__(**kwargs)
+        super(DiscriminatorLossLayer, self).__init__(**kwargs)  # python3.x也可以写作super().__init__(**kwargs)
 
     def lossfun(self, y_real, y_real_rec, y_fake, y_fake_rec):
+        """
+        真实图片与虚假图片的损失的差，如果损失看不出什么差距，那么虚假图片就可以以假乱真了
+        """
         loss_real = K.mean(K.abs(y_real - y_real_rec))
         loss_fake = K.mean(K.abs(y_fake - y_fake_rec))
         loss = loss_real - loss_fake
@@ -30,12 +35,13 @@ class DiscriminatorLossLayer(Layer):
         y_real = inputs[0]
         y_real_rec = inputs[1]
         y_fake = inputs[2]
-        y_fake_rec= inputs[3]
+        y_fake_rec = inputs[3]
 
         loss = self.lossfun(y_real, y_real_rec, y_fake, y_fake_rec)
         self.add_loss(loss, inputs=inputs)
 
         return y_real
+
 
 class GeneratorLossLayer(Layer):
     def __init__(self, **kwargs):
@@ -43,6 +49,9 @@ class GeneratorLossLayer(Layer):
         super(GeneratorLossLayer, self).__init__(**kwargs)
 
     def lossfun(self, y_fake, y_fake_rec):
+        """
+        重构图片与原图片的相似性
+        """
         loss = K.mean(K.abs(y_fake - y_fake_rec))
         return loss
 
@@ -72,6 +81,44 @@ class EBGAN(object):
 
         # Define the noise shape
         self.z_dims = 100
+
+        # Define the loss function ???
+        self.zero_loss = self.__zero_loss
+
+        # Define the iteration number of the discriminator
+        self.d_iter = 5
+
+        ## Build the model
+        # Generate fake and real img
+        x_real = Input(shape=self.img_shape)
+        z_sample = Input(shape=(self.z_dims,))
+        x_fake = self.generator(z_sample)
+
+        # Discriminator
+        x_real_rec = self.discriminator(x_real)
+        x_fake_rec = self.discriminator(x_fake)
+
+        # TODO: 此处存疑
+        d_loss = DiscriminatorLossLayer()([x_real, x_real_rec, x_fake, x_fake_rec])
+        g_loss = GeneratorLossLayer()([x_fake, x_fake_rec])
+
+        # Build discriminator trainer
+        self.generator.trainable = False
+        self.discriminator.trainable = True
+
+        self.dis_trainer = Model(inputs=[x_real, z_sample], outputs=[d_loss])
+        self.dis_trainer.compile(loss=[self.zero_loss], optimizer=Adam(lr=2.0e-4, beta_1=0.5))
+        # self.dis_trainer.summary()
+
+        # Build generator trainer
+        self.generator.trainable = True
+        self.discriminator.trainable = False
+
+        self.gen_trainer = Model(inputs=[x_real, z_sample],
+                                 outputs=[g_loss])
+        self.gen_trainer.compile(loss=[self.zero_loss],
+                                 optimizer=Adam(lr=2.0e-4, beta_1=0.5))
+        # self.gen_trainer.summary()
 
     def __decoder(self):
         # Define the input layer
@@ -108,6 +155,7 @@ class EBGAN(object):
         decoder.add(LeakyReLU(0.1))
 
         # Define the output
+        # NOTE: Here, we just know z in dim(x,y,z) for img is 3, but we concat decoder and encoder together to give x,y information for decoder's output.
         img = decoder(noise)
         return Model(noise, img)
 
@@ -153,41 +201,50 @@ class EBGAN(object):
         img_out = self.decoder(code)
         return Model(img_in, img_out)
 
+    def __zero_loss(self, y_true, y_pred):
+        return K.zeros_like(y_true)
 
-    def model(self):
-        # Generate fake and real img
-        x_real = Input(shape=self.img_shape)
-        z_sample = Input(shape=(self.z_dims,))
-        x_fake = self.generator(z_sample)
+    # Start training
+    def train(self, X_train, epochs=5001, batch=32):
+        base_idx = 0
+        for epoch in range(epochs):
+            # Train discriminator and generator for 5:1 epoch
+            for i in range(self.d_iter):
+                # Select a random image batch,
+                # ---!!!!!NOTE THAT THE IMAGES ARE PRE-SHUFFLED!!!!!---
+                # idx = np.random.randint(0, X_train.shape[0], batch)
+                idx = (np.array(range(batch)) + base_idx) % X_train.shape[0]
+                imgs = X_train[idx]
+                base_idx = base_idx + batch
+                # Generate noise code
+                z_sample = np.random.uniform(-1.0, 1.0, size=(batch, self.z_dims))
+                # Train the discriminator
+                dummy = np.zeros_like(imgs)  # TODO:这是啥
+                # g_loss = self.gen_trainer.train_on_batch([imgs,z_sample],dummy)
+                d_loss = self.dis_trainer.train_on_batch([imgs, z_sample], dummy)
 
-        # Discriminator
-        x_real_rec = self.discriminator(x_real)
-        x_fake_rec = self.discriminator(x_fake)
+            # Train generator
+            # Generate images
+            idx = (np.array(range(batch)) + base_idx) % X_train.shape[0]
+            imgs = X_train[idx]
+            base_idx = base_idx + batch
+            # Generate noise code
+            z_sample = np.random.uniform(-1.0, 1.0, size=(batch, self.z_dims))
+            # Train on batch
+            dummy = np.zeros_like(imgs)
+            g_loss = self.gen_trainer.train_on_batch([imgs, z_sample], dummy)
 
+            # Print training state
+            print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss[0], g_loss[0]))
 
-        d_loss = DiscriminatorLossLayer()([x_real, x_real_rec, x_fake, x_fake_rec])
-        g_loss = GeneratorLossLayer()([x_fake, x_fake_rec])
+            if epoch % 100 == 0:
+                self.discriminator.save('data/EBGAN_model/d/discriminator_{}.h5'.format(epoch))
+                self.generator.save('data/EBGAN_model/g/generator_{}.h5'.format(epoch))
 
-        # Build discriminator trainer
-        set_trainable(self.f_gen, False)
-        set_trainable(self.f_dis, True)
+if __name__ == '__main__':
+    IMGs, labels = load_h5py_to_np(OUTPUT_DATA)
+    X_train = IMGs.astype('float32') / 255.0
+    X_train = 2 * X_train - 1
 
-        self.dis_trainer = Model(inputs=[x_real, z_sample],
-                                 outputs=[d_loss])
-        self.dis_trainer.compile(loss=[zero_loss],
-                                 optimizer=Adam(lr=2.0e-4, beta_1=0.5))
-        self.dis_trainer.summary()
-
-        # Build generator trainer
-        set_trainable(self.f_gen, True)
-        set_trainable(self.f_dis, False)
-
-        self.gen_trainer = Model(inputs=[x_real, z_sample],
-                                 outputs=[g_loss])
-        self.gen_trainer.compile(loss=[zero_loss],
-                                 optimizer=Adam(lr=2.0e-4, beta_1=0.5))
-        self.gen_trainer.summary()
-
-        # Store trainers
-        self.store_to_save('gen_trainer')
-        self.store_to_save('dis_trainer')
+    gan = EBGAN()
+    gan.train(X_train,epochs=500)
