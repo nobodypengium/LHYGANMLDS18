@@ -21,7 +21,7 @@ class GAN(object):
 
         self.shape = (self.width, self.height, self.channels)
 
-        self.optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, decay=2e-8)
+        self.optimizer = Adam(lr=0.0002, beta_1=0.9, beta_2=0.999, decay=8e-8)
         self.G = self.__generator()
         self.G.compile(loss='binary_crossentropy', optimizer=self.optimizer)
 
@@ -39,7 +39,7 @@ class GAN(object):
         generator=Sequential()
         generator.add(Dense(256*16*16, input_shape=(100,), activation='relu',kernel_regularizer=regularizers.l2(0.01)))
         generator.add(Reshape((16,16,256)))
-        #generator.add(UpSampling2D())
+        generator.add(UpSampling2D())
         generator.add(Conv2D(128, kernel_size=4, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
         generator.add(UpSampling2D())
         generator.add(Conv2D(64, kernel_size=4, activation='relu',kernel_regularizer=regularizers.l2(0.01)))
@@ -102,7 +102,7 @@ class GAN(object):
             g_loss = self.stacked_generator_discriminator.train_on_batch(noise, y_mislabled)
 
             print ('epoch: %d, [Discriminator :: d_loss: %f], [ Generator :: loss: %f]' % (cnt, d_loss[0], g_loss))
-            if (cnt+1)%100==0:
+            if (cnt+1)%500==0:
                 self.stacked_generator_discriminator.save('data/GAN_model/gd/gan_model_{}.h5'.format(cnt+1))
                 self.G.save('data/GAN_model/g/gan_{}.h5'.format(cnt+1))
 

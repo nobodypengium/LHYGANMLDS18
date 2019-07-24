@@ -156,7 +156,7 @@ class GAN(object):
         generator.add(Dense(128 * 16 * 16, input_shape=(100,), activation='relu'))
 
         generator.add(Reshape((16, 16, 128)))
-        # generator.add(UpSampling2D())
+        generator.add(UpSampling2D())
         generator.add(Conv2D(128, kernel_size=4, activation='relu'))
 
         generator.add(UpSampling2D())
@@ -203,7 +203,7 @@ class GAN(object):
 
         return model
 
-    def train(self, X_train, epochs=1000, batch=32):
+    def train(self, X_train, epochs=5001, batch=32):
         # self.stacked_generator_discriminator=load_model('model/gan_tips_model_1700.h5')####
         # self.G=load_model('model/gan_tips_1700.h5')####
         # Adversarial ground truths
