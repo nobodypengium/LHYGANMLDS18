@@ -60,4 +60,4 @@ if __name__ == '__main__':
     # for file in file_list:
     #     generator = load_model(file)
     #     save_imgs(generator)
-    #
+    ###
