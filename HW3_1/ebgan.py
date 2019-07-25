@@ -244,7 +244,7 @@ class EBGAN(object):
             # Print training state
             print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss, g_loss))
 
-            if epoch % 100 == 0:
+            if epoch % 500 == 0:
                 self.discriminator.save('data/EBGAN_model/d/discriminator_{}.h5'.format(epoch))
                 self.generator.save('data/EBGAN_model/g/generator_{}.h5'.format(epoch))
 
