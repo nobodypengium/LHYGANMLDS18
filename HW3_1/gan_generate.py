@@ -12,7 +12,7 @@ import glob
 # py cuda epoch
 # os.environ["CUDA_VISIBLE_DEVICES"] = argv[1]
 
-T = 3000
+T = 5000
 np.random.seed(126)
 
 def save_imgs(generator):
@@ -33,7 +33,7 @@ def save_imgs(generator):
             axs[i,j].imshow(gen_imgs[cnt,:,:,:])
             axs[i,j].axis('off')
             cnt += 1
-    fig.savefig("output_epoch{}.png".format(T))
+    fig.savefig("data/output/GAN/epoch_" + str(T) + ".png")
     plt.close()
 
 def create_file_list(root_dir):
@@ -54,10 +54,11 @@ def create_file_list(root_dir):
     return file_list
 
 if __name__ == '__main__':
-    # file_list = create_file_list('data/GAN_model/g')
+    file_list = create_file_list('data/GAN_model/g')
     generator = load_model('data/GAN_model/g/gan_{}.h5'.format(T))
     save_imgs(generator)
     # for file in file_list:
     #     generator = load_model(file)
     #     save_imgs(generator)
-    #
+    #     print("第{}次epoch的结果已生成".format(T))
+    #     T=T+500

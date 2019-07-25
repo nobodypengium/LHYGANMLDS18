@@ -150,9 +150,17 @@ class EBGAN(object):
                    bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
         # 反卷积层 卷积层的前向操作可以表示为和矩阵C相乘，那么 我们很容易得到卷积层的反向传播就是和C的转置相乘。
-        decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
-                                    kernel_initializer=kernel_init, bias_initializer=bias_init, padding='same'))
+        # decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
+        #                             kernel_initializer=kernel_init, bias_initializer=bias_init, padding='same'))
         # decoder.add(Activation('tanh'))
+        decoder.add(
+            Conv2D(filters=64, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+                   bias_initializer=bias_init))
+        decoder.add(LeakyReLU(0.1))
+        decoder.add(
+            Conv2D(filters=3, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
+                   bias_initializer=bias_init))
+        decoder.add(LeakyReLU(0.1))
 
         decoder.add(Flatten())
         decoder.add(Dense(64 * 64 * 3, activation='tanh'))
@@ -244,7 +252,7 @@ class EBGAN(object):
             # Print training state
             print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss, g_loss))
 
-            if epoch % 500 == 0:
+            if epoch % 100 == 0:
                 self.discriminator.save('data/EBGAN_model/d/discriminator_{}.h5'.format(epoch))
                 self.generator.save('data/EBGAN_model/g/generator_{}.h5'.format(epoch))
 

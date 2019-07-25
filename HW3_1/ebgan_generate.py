@@ -76,7 +76,7 @@ if __name__ == '__main__':
         print("第{}次epoch的结果已生成".format(T))
         generator = load_model(file)
         save_imgs(generator)
-        T=T+100
+        T=T+500
     # for i in (2500,3000,3500,4000,4500):
     #     print("第{}次epoch的结果已生成".format(i))
     #     file = 'C:\Study\Python\LHYGANMLDS18\HW3_1\data\WGAN_model\GP\g\wgan_'+str(i)+'.h5'
