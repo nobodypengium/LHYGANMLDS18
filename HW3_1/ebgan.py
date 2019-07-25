@@ -149,25 +149,17 @@ class EBGAN(object):
             Conv2D(filters=128, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
                    bias_initializer=bias_init))
         decoder.add(LeakyReLU(0.1))
-        # # 反卷积层 卷积层的前向操作可以表示为和矩阵C相乘，那么 我们很容易得到卷积层的反向传播就是和C的转置相乘。
-        # decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
-        #                             kernel_initializer=kernel_init, bias_initializer=bias_init, padding='same'))
-        decoder.add(UpSampling2D())
-        decoder.add(
-            Conv2D(filters=64, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
-                   bias_initializer=bias_init))
-        decoder.add(LeakyReLU(0.1))
-        decoder.add(
-            Conv2D(filters=3, kernel_size=(5, 5), strides=(2, 2), padding='same', kernel_initializer=kernel_init,
-                   bias_initializer=bias_init))
-        decoder.add(LeakyReLU(0.1))
+        # 反卷积层 卷积层的前向操作可以表示为和矩阵C相乘，那么 我们很容易得到卷积层的反向传播就是和C的转置相乘。
+        decoder.add(Conv2DTranspose(filters=self.img_shape[2], kernel_size=(5, 5), strides=(1, 1),
+                                    kernel_initializer=kernel_init, bias_initializer=bias_init, padding='same'))
+        # decoder.add(Activation('tanh'))
 
         decoder.add(Flatten())
         decoder.add(Dense(64 * 64 * 3, activation='tanh'))
         decoder.add(Reshape((64, 64, 3)))
 
-        decoder.add(LeakyReLU(0.1))
-        decoder.add(Reshape(self.img_shape))
+        # decoder.add(LeakyReLU(0.1))
+        # decoder.add(Reshape(self.img_shape))
 
         # Define the output
         # NOTE: Here, we just know z in dim(x,y,z) for img is 3, but we concat decoder and encoder together to give x,y information for decoder's output.
@@ -262,4 +254,4 @@ if __name__ == '__main__':
     X_train = 2 * X_train - 1
 
     gan = EBGAN()
-    gan.train(X_train,epochs=500)
+    gan.train(X_train)
