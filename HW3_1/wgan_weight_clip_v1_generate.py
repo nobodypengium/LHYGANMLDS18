@@ -17,49 +17,8 @@ import glob
 T=0
 np.random.seed(126)
 
-
-def gradient_penalty_loss(y_true, y_pred, averaged_samples):
-    """Calculates the gradient penalty loss for a batch of "averaged" samples.
-    In Improved WGANs, the 1-Lipschitz constraint is enforced by adding a term to the
-    loss function that penalizes the network if the gradient norm moves away from 1.
-    However, it is impossible to evaluate this function at all points in the input
-    space. The compromise used in the paper is to choose random points on the lines
-    between real and generated samples, and check the gradients at these points. Note
-    that it is the gradient w.r.t. the input averaged samples, not the weights of the
-    discriminator, that we're penalizing!
-    In order to evaluate the gradients, we must first run samples through the generator
-    and evaluate the loss. Then we get the gradients of the discriminator w.r.t. the
-    input averaged samples. The l2 norm and penalty can then be calculated for this
-    gradient.
-    Note that this loss function requires the original averaged samples as input, but
-    Keras only supports passing y_true and y_pred to loss functions. To get around this,
-    we make a partial() of the function with the averaged_samples argument, and use that
-    for model training."""
-    # first get the gradients:
-    #   assuming: - that y_pred has dimensions (batch_size, 1)
-    #             - averaged_samples has dimensions (batch_size, nbr_features)
-    # gradients afterwards has dimension (batch_size, nbr_features), basically
-    # a list of nbr_features-dimensional gradient vectors
-    gradients = K.gradients(y_pred, averaged_samples)[0]
-    # compute the euclidean norm by squaring ...
-    gradients_sqr = K.square(gradients)
-    #   ... summing over the rows ...
-    gradients_sqr_sum = K.sum(gradients_sqr,
-                              axis=np.arange(1, len(gradients_sqr.shape)))
-    #   ... and sqrt
-    gradient_l2_norm = K.sqrt(gradients_sqr_sum)
-    # compute lambda * (1 - ||grad||)^2 still for each single sample
-    gradient_penalty = K.square(1 - gradient_l2_norm)
-    # return the mean as loss over all the batch samples
-    return K.mean(gradient_penalty)
-
-
-def asserstein_loss(y_true, y_pred):
+def wloss(y_true, y_pred):
     return K.mean(y_true * y_pred)
-
-def wasserstein_loss(y_true, y_pred):
-    return K.mean(y_true * y_pred)
-
 
 def save_imgs(generator):
     import matplotlib.pyplot as plt
@@ -84,7 +43,7 @@ def save_imgs(generator):
     # filepath, tmpfilename = os.path.split(generator)
     # shotname, extension = os.path.splitext(tmpfilename)
 
-    fig.savefig("data/output/WGAN_GP/epoch_" + str(T) + ".png")
+    fig.savefig("data/output/WGAN_1/epoch_" + str(T) + ".png")
     plt.close()
 
 def create_file_list(root_dir):
@@ -105,18 +64,15 @@ def create_file_list(root_dir):
     return file_list
 
 if __name__ == '__main__':
-    file_list = create_file_list('data/WGAN_model/GP/g/')
+    file_list = create_file_list('data/WGAN_model/weight_clip/org/g/')
     # generator = load_model('data/WGAN_model/g/gan_{}.h5'.format(T))
     # save_imgs(generator)
     # file_list=['C:\Study\Python\LHYGANMLDS18\HW3_1\data\WGAN_model\GP\g\wgan_5000.h5']
     for file in file_list:
         print("第{}次epoch的结果已生成".format(T))
-        model = load_model(file,custom_objects={'__wasserstein_loss': wasserstein_loss,'__gradient_penalty_loss':gradient_penalty_loss,'__asserstein_loss':asserstein_loss})
-        generator = Sequential()
-        generator.add(model.get_layer('input_5'))
-        generator.add(model.get_layer('model_1'))
+        generator = load_model(file,custom_objects={'wloss':wloss})
         save_imgs(generator)
-        T=T+500
+        T=T+100
     # for i in (2500,3000,3500,4000,4500):
     #     print("第{}次epoch的结果已生成".format(i))
     #     file = 'C:\Study\Python\LHYGANMLDS18\HW3_1\data\WGAN_model\GP\g\wgan_'+str(i)+'.h5'

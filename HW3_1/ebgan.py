@@ -220,7 +220,7 @@ class EBGAN(object):
         return K.zeros_like(y_true)
 
     # Start training
-    def train(self, X_train, epochs=5001, batch=32):
+    def train(self, X_train, epochs=10001, batch=32):
         base_idx = 0
         for epoch in range(epochs):
             # Train discriminator and generator for 5:1 epoch
@@ -252,7 +252,7 @@ class EBGAN(object):
             # Print training state
             print("Epoch: %d [D loss: %f] [G loss: %f]" % (epoch, d_loss, g_loss))
 
-            if epoch % 100 == 0:
+            if epoch % 1000 == 0:
                 self.discriminator.save('data/EBGAN_model/d/discriminator_{}.h5'.format(epoch))
                 self.generator.save('data/EBGAN_model/g/generator_{}.h5'.format(epoch))
 

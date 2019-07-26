@@ -3,6 +3,7 @@ import numpy as np
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, UpSampling2D, Conv2D
 from keras.layers import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
+from keras.models import load_model
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras import regularizers
@@ -21,7 +22,7 @@ class GAN(object):
 
         self.shape = (self.width, self.height, self.channels)
 
-        self.optimizer = Adam(lr=0.0002, beta_1=0.9, beta_2=0.999, decay=8e-8)
+        self.optimizer = Adam(lr=0.0002, beta_1=0.5, decay=8e-8)
         self.G = self.__generator()
         self.G.compile(loss='binary_crossentropy', optimizer=self.optimizer)
 
@@ -74,12 +75,16 @@ class GAN(object):
 
         return model
 
-    def train(self, X_train, epochs=5000, batch = 128):
+    def train(self, X_train, epochs=15000, batch = 128):
+        #load old model
+        self.stacked_generator_discriminator = load_model('data/GAN_model/gd/gan_model_5000.h5')
+        # self.G = load_model('data/GAN_model/g/gan_5000.h5')
+        base = 5000
 
         for cnt in range(epochs):
 
             ## train discriminator
-            for i in range(2):
+            for i in range(5):
                 self.D.trainable = True
                 random_index = np.random.randint(0, len(X_train) - np.int64(batch/2))
                 np.random.shuffle(X_train)
@@ -102,9 +107,9 @@ class GAN(object):
             g_loss = self.stacked_generator_discriminator.train_on_batch(noise, y_mislabled)
 
             print ('epoch: %d, [Discriminator :: d_loss: %f], [ Generator :: loss: %f]' % (cnt, d_loss[0], g_loss))
-            if (cnt+1)%500==0:
-                self.stacked_generator_discriminator.save('data/GAN_model/gd/gan_model_{}.h5'.format(cnt+1))
-                self.G.save('data/GAN_model/g/gan_{}.h5'.format(cnt+1))
+            if (cnt+1)%1000==0:
+                self.stacked_generator_discriminator.save('data/GAN_model/gd/gan_model_{}.h5'.format(cnt+1+base))
+                self.G.save('data/GAN_model/g/gan_{}.h5'.format(cnt+1+base))
 
 
 if __name__ == '__main__':

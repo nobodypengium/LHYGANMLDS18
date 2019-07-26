@@ -54,7 +54,7 @@ def create_file_list(root_dir):
     return file_list
 
 if __name__ == '__main__':
-    file_list = create_file_list('data/GAN_model/g')
+    # file_list = create_file_list('data/GAN_model/g')
     generator = load_model('data/GAN_model/g/gan_{}.h5'.format(T))
     save_imgs(generator)
     # for file in file_list:
