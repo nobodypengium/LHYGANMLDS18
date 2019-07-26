@@ -8,6 +8,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
+from HW3_1.generate_dataset_v2 import load_h5py_to_np, OUTPUT_DATA
 
 import matplotlib.pyplot as plt
 
@@ -22,6 +23,9 @@ class CGAN():
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         self.num_classes = 10
         self.latent_dim = 100
+
+        self.hair_color_num = 12
+        self.eye_color_num = 10
 
         optimizer = Adam(0.0002, 0.5)
 
@@ -107,16 +111,7 @@ class CGAN():
 
         return Model([img, label], validity)
 
-    def train(self, epochs, batch_size=128, sample_interval=50):
-
-        # Load the dataset
-        (X_train, y_train), (_, _) = mnist.load_data()
-
-        # Configure input
-        X_train = (X_train.astype(np.float32) - 127.5) / 127.5
-        X_train = np.expand_dims(X_train, axis=3)
-        y_train = y_train.reshape(-1, 1)
-
+    def train(self,X_train,y_train, epochs=5000, batch_size=128, sample_interval=50):
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
@@ -158,11 +153,25 @@ class CGAN():
             # If at save interval => save generated image samples
             if epoch % sample_interval == 0:
                 self.sample_images(epoch)
+            if epoch % (sample_interval*10) ==0:
+                self.generator.save('/data/models/CGAN/g/generator_{}.h5'.format(epoch))
+                self.discriminator.save('/data/models/CGAN/d/discriminator_{}.h5'.format(epoch))
 
     def sample_images(self, epoch):
         r, c = 2, 5
         noise = np.random.normal(0, 1, (r * c, 100))
-        sampled_labels = np.arange(0, 10).reshape(-1, 1)
+        #头发颜色12种，眼睛颜色10种，先头发后眼睛
+        # sampled_labels = np.arange(0, 10).reshape(-1, 1)
+        random_hair = np.random.randint(0,12,r*c)
+        random_eye = np.random.randint(12,22,r*c)
+        tags_v=[]
+        for t in range(r*c):
+            h_v = np.zeros(self.hair_color_num)
+            e_v = np.zeros(self.eye_color_num)
+            h_v[random_hair[t]] = 1
+            e_v[random_eye[t]] = 1
+            tags_v.append(np.concatenate((h_v, e_v)))
+        sampled_labels = np.array(tags_v)
 
         gen_imgs = self.generator.predict([noise, sampled_labels])
 
@@ -177,10 +186,18 @@ class CGAN():
                 axs[i,j].set_title("Digit: %d" % sampled_labels[cnt])
                 axs[i,j].axis('off')
                 cnt += 1
-        fig.savefig("images/%d.png" % epoch)
+        fig.savefig("data/outputs/CGAN/%d.png" % epoch)
         plt.close()
 
 
 if __name__ == '__main__':
+    # Load the dataset
+    X_train,y_train = load_h5py_to_np('/data/anime_face.h5')
+
+    # Configure input
+    X_train = (X_train.astype(np.float32) - 127.5) / 127.5
+    # X_train = np.expand_dims(X_train, axis=3)
+    # y_train = y_train.reshape(-1, 1)
+
     cgan = CGAN()
-    cgan.train(epochs=20000, batch_size=32, sample_interval=200)
+    cgan.train(epochs=20000, batch_size=32, sample_interval=50)
