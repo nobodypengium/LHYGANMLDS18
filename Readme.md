@@ -13,7 +13,9 @@ https://github.com/GatzZ/MLDS18
 https://github.com/d31003/MLDS_2019spring/tree/master/HW3/3-1
 # 目前调通了的
 WGAN-GP WGAN(使用weight-clip)
+## WGAN(weight-clip) 3000epoch
 ![WGAN(weight-clip) 3000epoch](https://www.picgd.com/images/2019/07/26/319aeb5bedf36277179e3aeec31f13d7.png)
+## WGAN-GP 4000epoch
 ![WGAN-GP 4000epoch](https://www.picgd.com/images/2019/07/26/244158b8bb499ff1680afc86b1633db7.png)
 
 GAN和EBGAN还没调通，能运行但是效果emmmmm 令人难以捉摸
