@@ -49,33 +49,33 @@ class GAN(object):
         """ Declare generator """
 
         generator = Sequential()
-        # generator.add(Dense(128 * 16 * 16, input_shape=(100,), activation='relu'))
-        #
-        # generator.add(Reshape((16, 16, 128)))
-        # generator.add(UpSampling2D())
-        # generator.add(Conv2D(128, kernel_size=4, activation='relu'))
-        #
-        # generator.add(UpSampling2D())
-        # generator.add(Conv2D(64, kernel_size=4, activation='relu'))
-        #
-        # generator.add(Conv2D(3, kernel_size=4, activation='relu'))
-        #
-        # generator.add(Flatten())
-        # generator.add(Dense(64 * 64 * 3, activation='tanh'))
-        # generator.add(Reshape((64, 64, 3)))
+        generator.add(Dense(128 * 16 * 16, input_shape=(100,), activation='relu'))
 
-        generator.add(Dense(128 * 16 * 16, activation="relu", input_dim=100))
         generator.add(Reshape((16, 16, 128)))
         generator.add(UpSampling2D())
-        generator.add(Conv2D(128, kernel_size=4, padding="same"))
-        generator.add(BatchNormalization(momentum=0.8))
-        generator.add(Activation("relu"))
+        generator.add(Conv2D(128, kernel_size=4, activation='relu'))
+
         generator.add(UpSampling2D())
-        generator.add(Conv2D(64, kernel_size=4, padding="same"))
-        generator.add(BatchNormalization(momentum=0.8))
-        generator.add(Activation("relu"))
-        generator.add(Conv2D(self.channels, kernel_size=4, padding="same"))
-        generator.add(Activation("tanh"))
+        generator.add(Conv2D(64, kernel_size=4, activation='relu'))
+
+        generator.add(Conv2D(3, kernel_size=4, activation='relu'))
+
+        generator.add(Flatten())
+        generator.add(Dense(64 * 64 * 3, activation='tanh'))
+        generator.add(Reshape((64, 64, 3)))
+
+        # generator.add(Dense(128 * 16 * 16, activation="relu", input_dim=100))
+        # generator.add(Reshape((16, 16, 128)))
+        # generator.add(UpSampling2D())
+        # generator.add(Conv2D(128, kernel_size=4, padding="same"))
+        # generator.add(BatchNormalization(momentum=0.8))
+        # generator.add(Activation("relu"))
+        # generator.add(UpSampling2D())
+        # generator.add(Conv2D(64, kernel_size=4, padding="same"))
+        # generator.add(BatchNormalization(momentum=0.8))
+        # generator.add(Activation("relu"))
+        # generator.add(Conv2D(self.channels, kernel_size=4, padding="same"))
+        # generator.add(Activation("tanh"))
 
         return generator
 
@@ -83,35 +83,35 @@ class GAN(object):
         """ Declare discriminator """
 
         discriminator = Sequential()
-        # discriminator.add(Conv2D(32, kernel_size=4, input_shape=(64, 64, 3), activation='relu'))
-        # 
-        # discriminator.add(Conv2D(64, kernel_size=4, padding='same', activation='relu'))
-        # 
-        # discriminator.add(Conv2D(128, kernel_size=4, activation='relu'))
-        # 
-        # discriminator.add(Conv2D(256, kernel_size=4, activation='relu'))
-        # 
-        # discriminator.add(Flatten())
-        # discriminator.add(Dense(1))
-        
-        discriminator.add(Conv2D(16, kernel_size=3, strides=2, input_shape=self.shape, padding="same"))
-        discriminator.add(LeakyReLU(alpha=0.2))
-        discriminator.add(Dropout(0.25))
-        discriminator.add(Conv2D(32, kernel_size=3, strides=2, padding="same"))
-        discriminator.add(ZeroPadding2D(padding=((0, 1), (0, 1))))
-        discriminator.add(BatchNormalization(momentum=0.8))
-        discriminator.add(LeakyReLU(alpha=0.2))
-        discriminator.add(Dropout(0.25))
-        discriminator.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
-        discriminator.add(BatchNormalization(momentum=0.8))
-        discriminator.add(LeakyReLU(alpha=0.2))
-        discriminator.add(Dropout(0.25))
-        discriminator.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
-        discriminator.add(BatchNormalization(momentum=0.8))
-        discriminator.add(LeakyReLU(alpha=0.2))
-        discriminator.add(Dropout(0.25))
+        discriminator.add(Conv2D(32, kernel_size=4, input_shape=(64, 64, 3), activation='relu'))
+
+        discriminator.add(Conv2D(64, kernel_size=4, padding='same', activation='relu'))
+
+        discriminator.add(Conv2D(128, kernel_size=4, activation='relu'))
+
+        discriminator.add(Conv2D(256, kernel_size=4, activation='relu'))
+
         discriminator.add(Flatten())
         discriminator.add(Dense(1))
+        
+        # discriminator.add(Conv2D(16, kernel_size=3, strides=2, input_shape=self.shape, padding="same"))
+        # discriminator.add(LeakyReLU(alpha=0.2))
+        # discriminator.add(Dropout(0.25))
+        # discriminator.add(Conv2D(32, kernel_size=3, strides=2, padding="same"))
+        # discriminator.add(ZeroPadding2D(padding=((0, 1), (0, 1))))
+        # discriminator.add(BatchNormalization(momentum=0.8))
+        # discriminator.add(LeakyReLU(alpha=0.2))
+        # discriminator.add(Dropout(0.25))
+        # discriminator.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
+        # discriminator.add(BatchNormalization(momentum=0.8))
+        # discriminator.add(LeakyReLU(alpha=0.2))
+        # discriminator.add(Dropout(0.25))
+        # discriminator.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+        # discriminator.add(BatchNormalization(momentum=0.8))
+        # discriminator.add(LeakyReLU(alpha=0.2))
+        # discriminator.add(Dropout(0.25))
+        # discriminator.add(Flatten())
+        # discriminator.add(Dense(1))
         
         return discriminator
 
