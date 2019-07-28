@@ -57,32 +57,20 @@ def create_image_list(file_list, width, height):
 
 def create_label_list(file_dist):
     # 初始化数组和字典
-    tags = []  # 为了生成独热编码存的数字标签，一个标签对应一个图片
-    tags_v = []  # 返回的独热编码
-    hair_color = []  # 存出现过的头发颜色
-    eyes_color = []  # 存出现过的眼睛颜色
+    hair_eyes = []
+    tags_v = []
     l = open(file_dist).readlines()
     # 如果字典里没有，以字典长度创建一个新编码，否则引用原编码
     print("开始读取编码")
     for s in l:
+        # v=np.zeros(120)
         s = s.split(',')[1].encode('utf8')
-        s = s.split()
-        h = s[0]
-        e = s[2]
-        x = []
-        if h in hair_color:
-            x.append(hair_color.index(h))
-        else:
-            hair_color.append(h)
-            x.append(hair_color.index(h))
-        if e in eyes_color:
-            x.append(eyes_color.index(e))
-        else:
-            eyes_color.append(e)
-            x.append(eyes_color.index(e))
-        tags.append(x)
+        if s not in hair_eyes:
+            # hair_eyes[s] = len(hair_eyes)
+            hair_eyes.append(s)
+        tags_v.append(hair_eyes.index(s))
     print("编码读取完成")
-    return tags, hair_color, eyes_color
+    return tags_v,hair_eyes
 
 
 def shuffle_image_label(anime_images, anime_tags):
@@ -106,20 +94,18 @@ def load_h5py_to_np(path):
     permutation = np.random.permutation(len(h5_file['labels']))
     shuffled_image = h5_file['image'][:][permutation, :, :, :]
     shuffled_label = h5_file['labels'][:][permutation]
-    hair_tags = h5_file['hair_tags'][:]
-    eyes_tags = h5_file['eyes_tags'][:]
+    tags = h5_file['tags'][:]
     # print('经过打乱之后数据集中的标签顺序是:\n', shuffled_label, len(h5_file['labels']))
-    return shuffled_image, shuffled_label, hair_tags,eyes_tags
+    return shuffled_image, shuffled_label, tags
 
 
 if __name__ == '__main__':
     file_list = create_file_list(INPUT_DATA_EXTRA)
     anime_images = create_image_list(file_list, IMAGE_WIDTH, IMAGE_HEIGHT)
-    anime_tags, hair_color, eyes_color = create_label_list(INPUT_LABEL)
-    anime_images, anime_tags = shuffle_image_label(anime_images, anime_tags)
-    f = h5py.File('data/anime_face_not_onehot_label_with_tags.h5', 'w')
+    anime_labels,anime_tags = create_label_list(INPUT_LABEL)
+    anime_images, anime_labels = shuffle_image_label(anime_images, anime_labels)
+    f = h5py.File('data/anime_face_one_int_label.h5', 'w')
     f['image'] = anime_images
-    f['labels'] = anime_tags
-    f['hair_tags'] = hair_color
-    f['eyes_tags'] = eyes_color
+    f['labels'] = anime_labels
+    f['tags'] =  anime_tags
     f.close()
