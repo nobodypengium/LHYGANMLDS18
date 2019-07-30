@@ -20,11 +20,11 @@ WGAN-GP WGAN(使用weight-clip) CGAN(接受单输入和多输入版本的)
 ## CGAN 单输入 9500epoch
 0. 请使用HW3_1中generate_dataset_onelabel.py来生成数据集
 1. 有些图片跟标签不符，看了看原数据集好多标注错误
-2. 图片比较糊，可能与Dense层参数过少有关，如果显存大请自行增加显存
+2. 图片比较糊，可能与Dense层参数过少有关，如果显存大请自行增加参数量
 ![CGAN 9500epoch](https://www.picgd.com/images/2019/07/30/8f8042eb2866650e12178ed39c20d112.png)
 ## CGAN 多输入 19000epoch
 0. 请使用HW3_1中generate_dataset_v3来生成数据集
 1. 有些图片跟标签不符，看了看原数据集好多标注错误
-2. 图片比较糊，可能与Dense层参数过少有关，如果显存大请自行增加显存
+2. 图片比较糊，可能与Dense层参数过少有关，如果显存大请自行增加参数量
 ![CGAN 19000epoch](https://www.picgd.com/images/2019/07/30/aca81426814a67cd6565612b8bd57d6c.png)
 GAN和EBGAN还没调通，能运行但是效果emmmmm 令人难以捉摸
